@@ -8,5 +8,18 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$USER_HOME$/OneDrive/Рабочий стол/OpenGLJava/lwjgl" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$USER_HOME$/OneDrive/Рабочий стол/OpenGLJava/lwjgl" />
+        </SOURCES>
+        <jarDirectory url="file://$USER_HOME$/OneDrive/Рабочий стол/OpenGLJava/lwjgl" recursive="false" />
+        <jarDirectory url="file://$USER_HOME$/OneDrive/Рабочий стол/OpenGLJava/lwjgl" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
   </component>
 </module>
