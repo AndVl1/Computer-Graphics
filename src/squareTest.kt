@@ -61,10 +61,10 @@ class HelloLWJGL {
         }
         GL11.glBegin(GL11.GL_QUADS)
         run {
-            GL11.glVertex3f(-sp, -sp, 0.0f)
-            GL11.glVertex3f(sp, -sp, 0.0f)
-            GL11.glVertex3f(sp, sp, 0.0f)
-            GL11.glVertex3f(-sp, sp, 0.0f)
+            GL11.glVertex2f(-sp, -sp)
+            GL11.glVertex2f(sp, -sp)
+            GL11.glVertex2f(sp, sp)
+            GL11.glVertex2f(-sp, sp)
         }
         GL11.glEnd()
     }
@@ -85,7 +85,7 @@ class HelloLWJGL {
         println("----------------------------")
         while (GLFW.glfwWindowShouldClose(window).toInt() == GLFW.GLFW_FALSE) {
             if (!swapcolor) {
-                GL11.glClearColor(0.0f, 0.0f, 1.0f, 0.0f)
+                GL11.glClearColor(0.0f, 0.0f, 1.0f, 0.5f)
             } else {
                 GL11.glClearColor(0.0f, 1.0f, 0.0f, 0.0f)
             }
