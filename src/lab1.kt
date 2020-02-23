@@ -97,7 +97,8 @@ class LWJGL {
                     top += .01f
             }
             mSWAP_COLOR -> {
-                if(count % 5 == 0) {
+                if(count > 10) {
+                    count = 0
                     colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                     colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                 }
