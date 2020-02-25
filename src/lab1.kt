@@ -6,8 +6,6 @@ import org.lwjgl.glfw.GLFWKeyCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.system.MemoryUtil
-import java.time.Instant
-import java.time.LocalDateTime
 import kotlin.random.Random
 
 class LWJGL {
@@ -27,7 +25,9 @@ class LWJGL {
     private val mRESIZE_UP = 6
     private val mRESIZE_DOWN = 7
     private val mSWAP_COLOR = 8
-    private var count = 0
+    private val mCHANGE_MAIN = 9
+    private val mCHANGE_QUAD = 10
+    private var count: Byte = 0
     private var colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
     private var colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
 
@@ -37,8 +37,8 @@ class LWJGL {
         GLFW.glfwDefaultWindowHints()
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE)
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE)
-        val WIDTH = 300
-        val HEIGHT = 300
+        val WIDTH = 500
+        val HEIGHT = 500
         window = GLFW.glfwCreateWindow(WIDTH, HEIGHT, "Hello LWJGL3", MemoryUtil.NULL, MemoryUtil.NULL)
         if (window == MemoryUtil.NULL) throw RuntimeException("Failed to create the GLFW window")
         GLFW.glfwSetKeyCallback(window, object : GLFWKeyCallback() {
@@ -81,7 +81,7 @@ class LWJGL {
                 }
             }
             mRESIZE_LEFT ->{
-                if (left < right)
+                if (left < right - 0.02f)
                     right -= 0.01f
             }
             mRESIZE_RIGHT -> {
@@ -89,7 +89,7 @@ class LWJGL {
                     right += 0.01f
             }
             mRESIZE_DOWN -> {
-                if (top > bottom)
+                if (top > bottom + 0.02f)
                     top -= .01f
             }
             mRESIZE_UP -> {
@@ -100,6 +100,18 @@ class LWJGL {
                 if(count > 10) {
                     count = 0
                     colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
+                    colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
+                }
+            }
+            mCHANGE_MAIN -> {
+                if (count > 20) {
+                    count = 0
+                    colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
+                }
+            }
+            mCHANGE_QUAD -> {
+                if (count > 20) {
+                    count = 0
                     colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                 }
             }
@@ -137,9 +149,11 @@ class LWJGL {
                 GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == 1 -> update(mRESIZE_DOWN)
                 GLFW.glfwGetKey(window, GLFW.GLFW_KEY_D) == 1 -> update(mRESIZE_RIGHT)
                 GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == 1 -> update(mSWAP_COLOR)
+                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == 1 -> update(mCHANGE_MAIN)
+                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == 1 -> update(mCHANGE_QUAD)
             }
 
-            if (count < Int.MAX_VALUE) count++
+            if (count < Byte.MAX_VALUE) count++
             else count = 0
 
 
