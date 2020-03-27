@@ -9,6 +9,20 @@ import org.lwjgl.system.MemoryUtil
 import kotlin.random.Random
 
 class LWJGL {
+    internal enum class Actions {
+        MOVE_LEFT,
+        MOVE_RIGHT,
+        MOVE_UP,
+        MOVE_DOWN,
+        RESIZE_LEFT,
+        RESIZE_RIGHT,
+        RESIZE_UP,
+        RESIZE_DOWN,
+        SWAP_COLOR,
+        CHANGE_MAIN,
+        CHANGE_QUAD
+    }
+
     private var window : Long = 0
     private var keyCallback: GLFWKeyCallback? = null
     private var errorCallback: GLFWErrorCallback? = null
@@ -16,17 +30,6 @@ class LWJGL {
     private var right = -0.2f
     private var top = -0.2f
     private var bottom = -1f
-    private val mMOVE_LEFT = 0
-    private val mMOVE_RIGHT = 1
-    private val mMOVE_UP = 2
-    private val mMOVE_DOWN = 3
-    private val mRESIZE_LEFT = 4
-    private val mRESIZE_RIGHT = 5
-    private val mRESIZE_UP = 6
-    private val mRESIZE_DOWN = 7
-    private val mSWAP_COLOR = 8
-    private val mCHANGE_MAIN = 9
-    private val mCHANGE_QUAD = 10
     private var count: Byte = 0
     private var colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
     private var colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
@@ -54,62 +57,62 @@ class LWJGL {
         GLFW.glfwSwapInterval(1)
         GLFW.glfwShowWindow(window)
     }
-    private fun update(mode: Int){
+    private fun update(mode: Actions){
         when (mode){
-            mMOVE_LEFT -> {
+            Actions.MOVE_LEFT -> {
                 if (left > -1f) {
                     left -= 0.01f
                     right -= 0.01f
                 }
             }
-            mMOVE_RIGHT -> {
+            Actions.MOVE_RIGHT -> {
                 if(right < 1f) {
                     right += 0.01f
                     left += 0.01f
                 }
             }
-            mMOVE_UP -> {
+            Actions.MOVE_UP -> {
                 if (top < 1f) {
                     top += 0.01f
                     bottom += 0.01f
                 }
             }
-            mMOVE_DOWN -> {
+            Actions.MOVE_DOWN -> {
                 if (bottom > -1f) {
                     top -= 0.01f
                     bottom -= 0.01f
                 }
             }
-            mRESIZE_LEFT ->{
+            Actions.RESIZE_LEFT ->{
                 if (left < right - 0.02f)
                     right -= 0.01f
             }
-            mRESIZE_RIGHT -> {
+            Actions.RESIZE_RIGHT -> {
                 if (right < 1f)
                     right += 0.01f
             }
-            mRESIZE_DOWN -> {
+            Actions.RESIZE_DOWN -> {
                 if (top > bottom + 0.02f)
                     top -= .01f
             }
-            mRESIZE_UP -> {
+            Actions.RESIZE_UP -> {
                 if (top < 1f)
                     top += .01f
             }
-            mSWAP_COLOR -> {
+            Actions.SWAP_COLOR -> {
                 if(count > 10) {
                     count = 0
                     colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                     colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                 }
             }
-            mCHANGE_MAIN -> {
+            Actions.CHANGE_MAIN -> {
                 if (count > 20) {
                     count = 0
                     colorMain = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
                 }
             }
-            mCHANGE_QUAD -> {
+            Actions.CHANGE_QUAD -> {
                 if (count > 20) {
                     count = 0
                     colorQuad = floatArrayOf(Random.nextFloat(), Random.nextFloat(), Random.nextFloat())
@@ -140,22 +143,21 @@ class LWJGL {
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
 
             when {
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_UP) == 1 -> update(mMOVE_UP)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_DOWN) == 1 -> update(mMOVE_DOWN)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT) == 1 -> update(mMOVE_LEFT)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT) == 1 -> update(mMOVE_RIGHT)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_W) == 1 -> update(mRESIZE_UP)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_A) == 1 -> update(mRESIZE_LEFT)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == 1 -> update(mRESIZE_DOWN)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_D) == 1 -> update(mRESIZE_RIGHT)
-                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == 1 -> update(mSWAP_COLOR)
-                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == 1 -> update(mCHANGE_MAIN)
-                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == 1 -> update(mCHANGE_QUAD)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_UP) == 1 -> update(Actions.MOVE_UP)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_DOWN) == 1 -> update(Actions.MOVE_DOWN)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT) == 1 -> update(Actions.MOVE_LEFT)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT) == 1 -> update(Actions.MOVE_RIGHT)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_W) == 1 -> update(Actions.RESIZE_UP)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_A) == 1 -> update(Actions.RESIZE_LEFT)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == 1 -> update(Actions.RESIZE_DOWN)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_D) == 1 -> update(Actions.RESIZE_RIGHT)
+                GLFW.glfwGetKey(window, GLFW.GLFW_KEY_SPACE) == 1 -> update(Actions.SWAP_COLOR)
+                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == 1 -> update(Actions.CHANGE_MAIN)
+                GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == 1 -> update(Actions.CHANGE_QUAD)
             }
 
             if (count < Byte.MAX_VALUE) count++
             else count = 0
-
 
             render()
             GLFW.glfwSwapBuffers(window)
