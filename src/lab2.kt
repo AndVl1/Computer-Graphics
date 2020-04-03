@@ -192,7 +192,7 @@ class Lab2 {
         val cabView = floatArrayOf(
             1f, 0f, 0f, 0f,
             0f, 1f, 0f, 0f,
-            -.5f * cos(PI / 4).toFloat(), -.5f * cos(PI / 4).toFloat(), -1f, 0f,
+            -.5f*cos(PI / 4).toFloat(),  -.5f*sin(PI / 4).toFloat(), -1f, 0f,
             0f, 0f, 0f, 1f
         )
         glMultMatrixf(cabView)
