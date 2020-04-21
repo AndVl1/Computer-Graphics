@@ -1,8 +1,6 @@
 package example
 
-import org.lwjgl.glfw.GLFW
-import org.lwjgl.glfw.GLFWErrorCallback
-import org.lwjgl.glfw.GLFWKeyCallback
+import org.lwjgl.glfw.*
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.MemoryUtil
@@ -101,6 +99,18 @@ class Lab3 {
                 }
             }
         }.also { keyCallback = it })
+
+        GLFW.glfwSetMouseButtonCallback(window, object : GLFWMouseButtonCallbackI {
+            override fun invoke(window: Long, button: Int, action: Int, mods: Int) {
+                if (button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_PRESS){
+                    var x = DoubleArray(1)
+                    var y = DoubleArray(1)
+                    GLFW.glfwGetCursorPos(window, x, y)
+                    print("${x[0]} - ${y[0]}")
+                }
+            }
+
+        })
 
         val vidMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor())
         GLFW.glfwSetWindowPos(window, (vidMode!!.width() - WIDTH) / 2, (vidMode.height() - HEIGHT) / 2)
