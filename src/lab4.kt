@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.MemoryUtil
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -21,13 +20,14 @@ class Lab4{
     private var width = WIDTH
     private var height = HEIGHT
     private var frameBuffer = FloatArray(width * height * 3)
-    private var colored = HashSet<Int>()
+    private var filteredBuffer = FloatArray(width * height * 3)
     private var filter = false
     private var final = false
 
     companion object {
         const val WIDTH = 800
         const val HEIGHT = 600
+        const val N = 3
     }
 
     private fun init() {
@@ -48,13 +48,13 @@ class Lab4{
                 } else if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
                     when (key) {
                         GLFW.GLFW_KEY_SPACE -> {
-//                            filter = !filter
-//                            drawLines()
+                            filter = !filter
+                            if (filter)
+                                drawPostFiltered()
                         }
                         GLFW.GLFW_KEY_BACKSPACE -> {
                             clearBuffer()
                             lines.clear()
-                            colored.clear()
                         }
                         GLFW.GLFW_KEY_ENTER -> {
                             final = true
@@ -67,18 +67,23 @@ class Lab4{
 
         GLFW.glfwSetMouseButtonCallback(window) { window, button, action, _ ->
             if (button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_PRESS){
+                filter = false
                 val x = DoubleArray(1)
                 val y = DoubleArray(1)
                 GLFW.glfwGetCursorPos(window, x, y)
                 lines.add(Pair(x[0], y[0]))
                 clearBuffer()
-                setPixelColor(x[0].toInt(), y[0].toInt(), Triple(1f, 1f, 1f), false)
+                setPixelColor(x[0].toInt(), y[0].toInt(), Triple(1f, 1f, 1f))
                 drawLines()
             }
             if (button == GLFW.GLFW_MOUSE_BUTTON_2 && action == GLFW.GLFW_PRESS){
                 val x = DoubleArray(1)
                 val y = DoubleArray(1)
                 GLFW.glfwGetCursorPos(window, x, y)
+                if (lines.last() != lines.first()) {
+                    final = true
+                    drawLines()
+                }
                 fill(x[0].toInt(), y[0].toInt())
             }
         }
@@ -96,12 +101,8 @@ class Lab4{
         GLFW.glfwShowWindow(window)
     }
 
-    private fun setPixelColor(x: Int, y: Int, rgb: Triple<Float, Float, Float>, f: Boolean) {
+    private fun setPixelColor(x: Int, y: Int, rgb: Triple<Float, Float, Float>) {
         val index = getIndex(x, y)
-
-        if (f) {
-            colored.add(y)
-        }
 
         frameBuffer[index] = rgb.first
         frameBuffer[index+1] = rgb.second
@@ -109,23 +110,13 @@ class Lab4{
     }
 
     private fun drawLines(){
-        colored.clear()
         if (lines.size > 1 && !final) {
-            if (!filter) {
-                for (i in 0 until lines.lastIndex) {
-                    drawLine(lines[i].first, lines[i].second, lines[i + 1].first, lines[i + 1].second)
-                }
-            } else {
-                for (i in 0 until lines.lastIndex) {
-                    drawLinePostFiltered(lines[i].first, lines[i].second, lines[i + 1].first, lines[i + 1].second)
-                }
+            for (i in 0 until lines.lastIndex) {
+                drawLine(lines[i].first, lines[i].second, lines[i + 1].first, lines[i + 1].second)
             }
+
         } else if (final) {
-            if (!filter) {
-                drawLine(lines.last().first, lines.last().second, lines.first().first, lines.first().second)
-            }else {
-                drawLinePostFiltered(lines.last().first, lines.last().second, lines.first().first, lines.first().second)
-            }
+            drawLine(lines.last().first, lines.last().second, lines.first().first, lines.first().second)
             final = false
         }
     }
@@ -144,7 +135,7 @@ class Lab4{
         if (dy == 0) {
             var i = x
             while (abs(x2-i) > 0) {
-                setPixelColor(i, y, Triple(1f, 1f, 1f), false)
+                setPixelColor(i, y, Triple(1f, 1f, 1f))
                 i += signX
             }
             return
@@ -152,7 +143,7 @@ class Lab4{
         if (dx == 0) {
             var i = y
             while (abs(y2-i) > 0) {
-                setPixelColor(x, i, Triple(1f, 1f, 1f), false)
+                setPixelColor(x, i, Triple(1f, 1f, 1f))
                 i += signY
             }
             return
@@ -166,7 +157,7 @@ class Lab4{
 
         var i = 0
         while (true) {
-            setPixelColor(x, y, Triple(1f, 1f, 1f), false)
+            setPixelColor(x, y, Triple(1f, 1f, 1f))
             if (e < dx) {
                 if (change == 1)
                     y += signY
@@ -180,97 +171,114 @@ class Lab4{
             }
             i++
             if (i > dx + dy) {
-                setPixelColor(x, y, Triple(1f, 1f, 1f), false)
+                setPixelColor(x, y, Triple(1f, 1f, 1f))
                 break
             }
         }
     }
 
     // постфильтрация с равномерным усреднением области NхN (без использования аккумулирующего буфера)
-    private fun drawLinePostFiltered(x1: Double, y1: Double, x2: Double, y2: Double) {
-
+    private fun drawPostFiltered() {
+        val colors = ArrayList<Triple<Float, Float, Float>>()
+        for (y in N/2+1 until height - N/2){
+            for (x in N/2+1 until width - N/2) {
+                for (i in y-1 .. y+1) {
+                    for (j in x-1 .. x+1){
+                        val index = getIndex(j, i)
+                        colors.add(Triple( frameBuffer[index], frameBuffer[index+1], frameBuffer[index+2]))
+                    }
+                }
+                val index = getIndex(x, y)
+                val newColor = getColor(colors)
+                filteredBuffer[index] = newColor.first
+                filteredBuffer[index + 1] = newColor.second
+                filteredBuffer[index + 2] = newColor.third
+                colors.clear()
+            }
+        }
     }
 
-    private fun fill(x: Int, y: Int) {
+    private fun getColor(colors: ArrayList<Triple<Float, Float, Float>>) : Triple<Float, Float, Float> {
+        var r = 0f
+        var g = 0f
+        var b = 0f
+        for (t in colors) {
+            r += t.first
+            g += t.second
+            b += t.third
+        }
+        r /= N * N
+        g /= N * N
+        b /= N * N
+        return Triple(r, g, b)
+    }
+
+    private fun fill(x: Int, y: Int){
         // А7: построчного заполнения с затравкой для восьмисвязной гранично-определенной области;
         val s = Stack<Pair<Int, Int>>()
         s.push(Pair(x, y))
 
-        while (s.isNotEmpty()) {
+        while (s.isNotEmpty()){
             val p = s.pop()
-            var x1Min = p.first
-            var x1Max = p.first
-            val y1 = p.second
 
-            // строка вправо
-            while (true) {
-                val index = getIndex(x1Max + 1, y1)
+            var xr = p.first
+            var xl = p.first
+            var y1 = p.second
+
+            while(check(xl, y1)) {
+                xl--
+
+//                if (xl <= 0) {
+//                    xl = 0
+//                    break
+//                }
+            }
+            while(check(xr, y1)) {
+                xr++
+
+//                if (xr+1 >= width) {
+//                    xr = width - 1
+//                    break
+//                }
+            }
+            println("$xl $xr")
+
+            for (i in xl until xr) {
+                setPixelColor(i, y1, Triple(1f, 1f, 1f))
+            }
+            var f = true
+            for (i in xl until xr) {
+                val index = getIndex(i, y1 - 1)
                 val point = Triple(frameBuffer[index], frameBuffer[index + 1], frameBuffer[index + 2])
-                if (point.first != 0f && point.second != 0f && point.third != 0f) break
-
-//                if (frame.contains(index)) break
-                x1Max++
-                if (x1Max+1 >= width) {
-                    x1Max = width - 1
-                    break
+                if (point.first == 0f && point.second == 0f && point.third == 0f) {
+                    f = if (f) {
+                        s.push(Pair(i, y1 - 1))
+                        false
+                    } else {
+                        true
+                    }
                 }
             }
-            // влево
-            while (true) {
-                val index = getIndex(x1Min - 1, y1)
+            f = true
+            for (i in xl until xr) {
+                val index = getIndex(i, y1 + 1)
                 val point = Triple(frameBuffer[index], frameBuffer[index + 1], frameBuffer[index + 2])
-                if (point.first != 0f && point.second != 0f && point.third != 0f) break
-                x1Min--
-                if (x1Min < 0) {
-                    x1Min = 0
-                    break
-                }
-            }
-            for (i in x1Min until x1Max) {
-                setPixelColor(i, y1, Triple(1f, 1f, 1f), true)
-            }
-
-            // верх
-            if (y1-1 > 0 && !colored.contains(y1-1)) {
-                var f = true
-                var i = if (x1Min > 0) x1Min - 1 else 0
-                val max = if (x1Max < width - 2) x1Max + 1 else width - 1
-                while (i <= max) {
-                    val index = getIndex(i, y1 - 1)
-                    val point = Triple(frameBuffer[index], frameBuffer[index + 1], frameBuffer[index + 2])
-                    if (point.first == 0f && point.second == 0f && point.third == 0f) {
-                        if (f) {
-                            s.push(Pair(i, y1-1))
-                            f = false
-                        }
+                if (point.first == 0f && point.second == 0f && point.third == 0f) {
+                    f = if (f) {
+                        s.push(Pair(i, y1 + 1))
+                        false
                     } else {
-                        f = true
+                        true
                     }
-                    i++
-                }
-            }
-
-            // низ
-            if (y1 + 1 < height && !colored.contains(y1+1)) {
-                var f = true
-                var i = if (x1Min > 0) x1Min - 1 else 0
-                val max = if (x1Max < width - 2) x1Max + 1 else width - 1
-                while (i <= max) {
-                    val index = getIndex(i, y1 + 1)
-                    val point = Triple(frameBuffer[index], frameBuffer[index + 1], frameBuffer[index + 2])
-                    if (point.first == 0f && point.second == 0f && point.third == 0f) {
-                        if (f) {
-                            s.push(Pair(i, y1+1))
-                            f = false
-                        }
-                    } else {
-                        f = true
-                    }
-                    i++
                 }
             }
         }
-        colored.clear()
+    }
+
+    private fun check(x: Int, y: Int): Boolean{
+        val index = getIndex(x, y)
+        val point = Triple(frameBuffer[index], frameBuffer[index + 1], frameBuffer[index + 2])
+        return !(point.first != 0f && point.second != 0f && point.third != 0f)
     }
 
     private fun resize() {
@@ -283,7 +291,6 @@ class Lab4{
         glLoadIdentity()
         clearBuffer()
         lines.clear()
-        colored.clear()
     }
 
     private fun loop() {
@@ -305,7 +312,9 @@ class Lab4{
 
 
 
-            glDrawPixels(width, height, GL_RGB, GL_FLOAT, frameBuffer)
+            if (!filter) {
+                glDrawPixels(width, height, GL_RGB, GL_FLOAT, frameBuffer)
+            } else glDrawPixels(width, height, GL_RGB, GL_FLOAT, filteredBuffer)
 
             GLFW.glfwSwapBuffers(window)
             GLFW.glfwPollEvents()
@@ -329,6 +338,7 @@ class Lab4{
 
     private fun clearBuffer(){
         frameBuffer = FloatArray(width * height * 3)
+        filteredBuffer = FloatArray(width * height * 3)
     }
 }
 
