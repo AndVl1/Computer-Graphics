@@ -111,25 +111,28 @@ class Lab5{
 
     private fun findIntersection() {
         for (i in subj.vertex.indices) {
-            val startA: Point = subj.vertex[i]
-            val endA: Point = subj.vertex[if (i + 1 < subj.vertex.size) i + 1 else 0]
+            val enterA: Point = subj.vertex[i]
+            val exit: Point = subj.vertex[if (i + 1 < subj.vertex.size) i + 1 else 0]
             for (j in clip.vertex.indices) {
-                val startB: Point = clip.vertex[j]
-                val endB: Point = clip.vertex[if (j + 1 < clip.vertex.size) j + 1 else 0]
+                val enterB: Point = clip.vertex[j]
+                val exitB: Point = clip.vertex[if (j + 1 < clip.vertex.size) j + 1 else 0]
 
                 val x =
-                    ((startA.x * endA.y - startA.y * endA.x) * (startB.x - endB.x) - (startB.x * endB.y - startB.y * endB.x) * (startA.x - endA.x)) /
-                            ((startA.x - endA.x) * (startB.y - endB.y) - (startA.y - endA.y) * (startB.x - endB.x))
+                    ((enterA.x * exit.y - enterA.y * exit.x) * (enterB.x - exitB.x) -
+                            (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.x - exit.x)) /
+                            ((enterA.x - exit.x) * (enterB.y - exitB.y) - (enterA.y - exit.y) * (enterB.x - exitB.x))
                 val y =
-                    ((startA.x * endA.y - startA.y * endA.x) * (startB.y - endB.y) - (startB.x * endB.y - startB.y * endB.x) * (startA.y - endA.y)) /
-                            ((startA.x - endA.x) * (startB.y - endB.y) - (startA.y - endA.y) * (startB.x - endB.x))
+                    ((enterA.x * exit.y - enterA.y * exit.x) * (enterB.y - exitB.y)
+                            - (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.y - exit.y)) /
+                            ((enterA.x - exit.x) * (enterB.y - exitB.y) - (enterA.y - exit.y) * (enterB.x - exitB.x))
 
-                if ((x >= startA.x && x <= endA.x || x >= endA.x && x <= startA.x) &&
-                    (y >= startA.y && y <= endA.y || y >= endA.y && y <= startA.y) &&
-                    (x >= startB.x && x <= endB.x || x >= endB.x && x <= startB.x) &&
-                    (y >= startB.y && y <= endB.y || y >= endB.y && y <= startB.y)
+                if ((x >= enterA.x && x <= exit.x || x >= exit.x && x <= enterA.x) &&
+                    (y >= enterA.y && y <= exit.y || y >= exit.y && y <= enterA.y) &&
+                    (x >= enterB.x && x <= exitB.x || x >= exitB.x && x <= enterB.x) &&
+                    (y >= enterB.y && y <= exitB.y || y >= exitB.y && y <= enterB.y)
                 ) {
                     intersection.add(Point(x, y, Type.INTERSECTION))
+                    println("adding $x $y")
                 }
             }
         }
