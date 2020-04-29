@@ -45,7 +45,7 @@ class Lab5{
         GLFW.glfwDefaultWindowHints()
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE)
-        window = GLFW.glfwCreateWindow(WIDTH, HEIGHT, "LAB4", MemoryUtil.NULL, MemoryUtil.NULL)
+        window = GLFW.glfwCreateWindow(WIDTH, HEIGHT, "LAB5", MemoryUtil.NULL, MemoryUtil.NULL)
         if (window == MemoryUtil.NULL) throw RuntimeException("Failed to create the GLFW window")
         GLFW.glfwSetKeyCallback(window, object : GLFWKeyCallback() {
             override fun invoke(window: Long, key: Int, scancode: Int, action: Int, mods: Int) {
@@ -116,14 +116,14 @@ class Lab5{
             for (j in clip.vertex.indices) {
                 val startB: Point = clip.vertex[j]
                 val endB: Point = clip.vertex[if (j + 1 < clip.vertex.size) j + 1 else 0]
-                // find dot
+
                 val x =
                     ((startA.x * endA.y - startA.y * endA.x) * (startB.x - endB.x) - (startB.x * endB.y - startB.y * endB.x) * (startA.x - endA.x)) /
                             ((startA.x - endA.x) * (startB.y - endB.y) - (startA.y - endA.y) * (startB.x - endB.x))
                 val y =
                     ((startA.x * endA.y - startA.y * endA.x) * (startB.y - endB.y) - (startB.x * endB.y - startB.y * endB.x) * (startA.y - endA.y)) /
                             ((startA.x - endA.x) * (startB.y - endB.y) - (startA.y - endA.y) * (startB.x - endB.x))
-                // check inside line and add in array
+
                 if ((x >= startA.x && x <= endA.x || x >= endA.x && x <= startA.x) &&
                     (y >= startA.y && y <= endA.y || y >= endA.y && y <= startA.y) &&
                     (x >= startB.x && x <= endB.x || x >= endB.x && x <= startB.x) &&
@@ -139,33 +139,30 @@ class Lab5{
         var directOrderB = true
         var beginAtIn = true
         val res = ArrayList<Figure>()
-        // take lists
-        // take lists
-        val b: ArrayList<Point>
-        val a: ArrayList<Point> = subj.vertexInsert
+
+        val clipCopy: ArrayList<Point>
+        val subjCopy: ArrayList<Point> = subj.vertexInsert
         if (directOrderB) {
-            b = clip.vertexInsert
+            clipCopy = clip.vertexInsert
         } else {
-            b = ArrayList()
-            for (i in clip.vertexInsert.indices.reversed()) b.add(clip.vertexInsert.get(i))
+            clipCopy = ArrayList()
+            for (i in clip.vertexInsert.indices.reversed()) clipCopy.add(clip.vertexInsert.get(i))
         }
-        // do list of in/out
-        // do list of in/out
+
         val begins = LinkedList<Point>()
-        for (point in a) {
+        for (point in subjCopy) {
             if (point.isIntersection) {
                 if (beginAtIn) begins.add(point)
                 beginAtIn = !beginAtIn
             }
         }
-        // go through lists
-        // go through lists
+
         while (begins.size > 0) {
-            val resPart: Figure = Figure()
+            val resPart = Figure()
             val beginPoint = begins.pollFirst()
             var nowPoint = beginPoint
             var isA = true
-            var currentList = a
+            var currentList = subjCopy
             // go through AB
             do {
                 var i = currentList.indexOf(nowPoint)
@@ -179,7 +176,7 @@ class Lab5{
                 if (i == -1) break
                 nowPoint = currentList[i]
                 begins.remove(nowPoint)
-                currentList = if (isA) b else a
+                currentList = if (isA) clipCopy else subjCopy
                 isA = !isA
             } while (nowPoint !== beginPoint)
             res.add(resPart)
@@ -303,40 +300,7 @@ private class Figure: Iterable<Point> {
         vertex.clear()
     }
 
-//    fun draw(color: FloatArray, filled: Boolean) {
-//        glPushMatrix()
-//        if (filled) {
-//            glLineWidth(5f)
-//        }
-//        glBegin(if (filled) GL_LINE_LOOP else if (isolation) GL_LINE_LOOP else GL_LINE_STRIP)
-//        glColor4f(color[0], color[1], color[2], 1f)
-//        for (point in vertex) {
-//            val x = (point.x.toFloat() - 500f) / 500f
-//            val y = -(point.y.toFloat() - 500f) / 500f
-//            glVertex2f(x, y)
-//        }
-//        glEnd()
-//        glLineWidth(1f)
-//        glPopMatrix()
-//    }
-
-//    fun drawDots(color: FloatArray) {
-//        for (point in vertex) {
-//            val x = (point.x.toFloat() - 500f) / 500f
-//            val y = -(point.y.toFloat() - 500f) / 500f
-//            glPushMatrix()
-//            glBegin(GL_POLYGON)
-//            glColor4f(color[0], color[1], color[2], 1f)
-//            glVertex2f(x + 0.005f, y + 0.005f)
-//            glVertex2f(x + 0.005f, y - 0.005f)
-//            glVertex2f(x - 0.005f, y - 0.005f)
-//            glVertex2f(x - 0.005f, y + 0.005f)
-//            glEnd()
-//            glPopMatrix()
-//        }
-//    }
-
-    fun insertVertex(intersection: java.util.ArrayList<Point>) {
+    fun insertVertex(intersection: ArrayList<Point>) {
         vertexInsert = vertex.clone() as ArrayList<Point>
         for (point in intersection) { // take point
             for (j in vertexInsert.indices) { // find place
@@ -347,15 +311,6 @@ private class Figure: Iterable<Point> {
                 }
             }
         }
-    }
-
-    private fun checkInsert(start: Point, end: Point, middle: Point): Boolean {
-//            System.out.println(Math.abs((float)( -start.x * end.y + end.x * start.y) / (start.y - end.y) * middle.x + (end.x - start.x) * middle.y - 1));
-        return abs((-start.x * end.y + end.x * start.y).toFloat() / ((start.y - end.y) * middle.x + (end.x - start.x) * middle.y) - 1) <= 0.001 &&
-                middle.x < start.x.coerceAtLeast(end.x) &&
-                middle.x > start.x.coerceAtMost(end.x) &&
-                middle.y < start.y.coerceAtLeast(end.y) &&
-                middle.y > start.y.coerceAtMost(end.y)
     }
 
     init {
@@ -398,6 +353,17 @@ private class Point(var x: Float, var y: Float, t: Lab5.Type) {
         return result
     }
 
+}
+
+
+
+private fun checkInsert(start: Point, end: Point, middle: Point): Boolean {
+//            System.out.println(Math.abs((float)( -start.x * end.y + end.x * start.y) / (start.y - end.y) * middle.x + (end.x - start.x) * middle.y - 1));
+    return abs((-start.x * end.y + end.x * start.y).toFloat() / ((start.y - end.y) * middle.x + (end.x - start.x) * middle.y) - 1) <= 0.001 &&
+            middle.x < start.x.coerceAtLeast(end.x) &&
+            middle.x > start.x.coerceAtMost(end.x) &&
+            middle.y < start.y.coerceAtLeast(end.y) &&
+            middle.y > start.y.coerceAtMost(end.y)
 }
 
 private fun Boolean.toInt() = if (this) 1 else 0
