@@ -136,49 +136,44 @@ class Lab5{
     }
 
     private fun weilerAtherton () {
-        var directOrderB = true
-        var beginAtIn = true
+        var beginning = true
         val res = ArrayList<Figure>()
 
-        val clipCopy: ArrayList<Point>
         val subjCopy: ArrayList<Point> = subj.vertexInsert
-        if (directOrderB) {
-            clipCopy = clip.vertexInsert
-        } else {
-            clipCopy = ArrayList()
-            for (i in clip.vertexInsert.indices.reversed()) clipCopy.add(clip.vertexInsert.get(i))
-        }
 
-        val begins = LinkedList<Point>()
+        val clipCopy: ArrayList<Point> = clip.vertexInsert
+
+
+        val enters = LinkedList<Point>()
         for (point in subjCopy) {
             if (point.isIntersection) {
-                if (beginAtIn) begins.add(point)
-                beginAtIn = !beginAtIn
+                if (beginning) enters.add(point)
+                beginning = !beginning
             }
         }
 
-        while (begins.size > 0) {
+        while (enters.size > 0) {
             val resPart = Figure()
-            val beginPoint = begins.pollFirst()
-            var nowPoint = beginPoint
+            val begin = enters.pollFirst()
+            var current = begin
             var isA = true
             var currentList = subjCopy
             // go through AB
             do {
-                var i = currentList.indexOf(nowPoint)
+                var i = currentList.indexOf(current)
                 do {
                     if (i == -1) break
-                    if (intersection.vertex.contains(currentList[i]))
+//                    if (intersection.vertex.contains(currentList[i]))
                         resPart.add(currentList[i])
                     i++
                     if (i == currentList.size) i = 0
                 } while (!currentList[i].isIntersection)
                 if (i == -1) break
-                nowPoint = currentList[i]
-                begins.remove(nowPoint)
+                current = currentList[i]
+                enters.remove(current)
                 currentList = if (isA) clipCopy else subjCopy
                 isA = !isA
-            } while (nowPoint !== beginPoint)
+            } while (current !== begin)
             res.add(resPart)
         }
         result.addAll(res)
