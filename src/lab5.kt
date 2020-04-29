@@ -158,12 +158,12 @@ class Lab5{
             var current = begin
             var isA = true
             var currentList = subjCopy
-            // go through AB
+
             do {
                 var i = currentList.indexOf(current)
                 do {
                     if (i == -1) break
-//                    if (intersection.vertex.contains(currentList[i]))
+
                         resPart.add(currentList[i])
                     i++
                     if (i == currentList.size) i = 0
@@ -284,12 +284,6 @@ private class Figure: Iterable<Point> {
         }
     }
 
-    fun setClose(): Boolean {
-        isolation = true
-        println("Close figure")
-        return vertex.size > 2
-    }
-
     fun clear() {
         isolation = false
         vertex.clear()
@@ -297,8 +291,8 @@ private class Figure: Iterable<Point> {
 
     fun insertVertex(intersection: ArrayList<Point>) {
         vertexInsert = vertex.clone() as ArrayList<Point>
-        for (point in intersection) { // take point
-            for (j in vertexInsert.indices) { // find place
+        for (point in intersection) {
+            for (j in vertexInsert.indices) {
                 val k = if (j + 1 == vertexInsert.size) 0 else j + 1
                 if (checkInsert(vertexInsert[j], vertexInsert[k], point)) {
                     vertexInsert.add(if (k == 0) vertexInsert.size else k, point)
@@ -353,8 +347,7 @@ private class Point(var x: Float, var y: Float, t: Lab5.Type) {
 
 
 private fun checkInsert(start: Point, end: Point, middle: Point): Boolean {
-//            System.out.println(Math.abs((float)( -start.x * end.y + end.x * start.y) / (start.y - end.y) * middle.x + (end.x - start.x) * middle.y - 1));
-    return abs((-start.x * end.y + end.x * start.y).toFloat() / ((start.y - end.y) * middle.x + (end.x - start.x) * middle.y) - 1) <= 0.001 &&
+    return abs((-start.x * end.y + end.x * start.y) / ((start.y - end.y) * middle.x + (end.x - start.x) * middle.y) - 1) <= 0.001 &&
             middle.x < start.x.coerceAtLeast(end.x) &&
             middle.x > start.x.coerceAtMost(end.x) &&
             middle.y < start.y.coerceAtLeast(end.y) &&
