@@ -21,5 +21,14 @@
         <jarDirectory url="file://$USER_HOME$/Desktop/lwjgl-release-3.2.3-custom" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/Telegram Desktop/pngdecoder-1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
