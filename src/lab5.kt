@@ -15,8 +15,8 @@ class Lab5{
     private var keyCallback: GLFWKeyCallback? = null
     private var errorCallback: GLFWErrorCallback? = null
     private var colorMain = floatArrayOf(.0f, .0f, .0f)
-    private var subj = Figure()
-    private var clip = Figure()
+    private var subjs = ArrayList<Figure>()
+    private var clips = ArrayList<Figure>()
     private var intersection = Figure()
     private val result = ArrayList<Figure>()
     private var intersect = false
@@ -58,22 +58,29 @@ class Lab5{
                     when (key) {
                         GLFW.GLFW_KEY_BACKSPACE -> {
                             clear()
-                            subj.clear()
-                            clip.clear()
+                            subjs.clear()
+                            clips.clear()
                             intersection.clear()
                             result.clear()
+                            subjs.add(Figure())
+                            clips.add(Figure())
                         }
                         GLFW.GLFW_KEY_ENTER -> {
-                            if (!final[0]) final[0] = true
-                            else final[1] = true
+                            if (subjs.last().vertex.isNotEmpty()) {
+                                subjs.last().mode = GL_LINE_LOOP
+                                subjs.add(Figure())
+                                println(subjs.size)
+                            }
+                        }
+                        GLFW.GLFW_KEY_TAB -> {
+                            if (clips.last().vertex.isNotEmpty()) {
+                                clips.last().mode = GL_LINE_LOOP
+                                clips.add(Figure())
+                            }
                         }
                         GLFW.GLFW_KEY_SPACE -> {
                             intersect = !intersect
                             cut()
-                        }
-                        GLFW.GLFW_KEY_S -> {
-                            subj = clip.also { clip = it }
-                            print("${subj.vertex.size} ${clip.vertex.size}")
                         }
                     }
                 }
@@ -86,9 +93,11 @@ class Lab5{
                 val y = DoubleArray(1)
                 GLFW.glfwGetCursorPos(window, x, y)
                 if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
-                    subj.add(Point(x[0].toFloat(), y[0].toFloat(), Type.VERTEX))
+                    if (subjs.isEmpty()) subjs.add(Figure())
+                    subjs.last().add(Point(x[0].toFloat(), y[0].toFloat(), Type.VERTEX))
                 } else if (button == GLFW.GLFW_MOUSE_BUTTON_2) {
-                    clip.add(Point(x[0].toFloat(), y[0].toFloat(), Type.VERTEX))
+                    if (clips.isEmpty()) clips.add(Figure())
+                    clips.last().add(Point(x[0].toFloat(), y[0].toFloat(), Type.VERTEX))
                 }
             }
         }
@@ -104,120 +113,123 @@ class Lab5{
     // внутреннее отсечение В-А (вариант 22)
     private fun cut() {
         findIntersection()
-        subj.insertVertex(intersection.vertex)
-        clip.insertVertex(intersection.vertex)
-        weilerAtherton()
+
+//        weilerAtherton()
     }
 
     private fun findIntersection() {
-        for (i in subj.vertex.indices) {
-            val enterA: Point = subj.vertex[i]
-            val exit: Point = subj.vertex[if (i + 1 < subj.vertex.size) i + 1 else 0]
-            for (j in clip.vertex.indices) {
-                val enterB: Point = clip.vertex[j]
-                val exitB: Point = clip.vertex[if (j + 1 < clip.vertex.size) j + 1 else 0]
+        for (subj in subjs) {
+            for (i in subj.vertex.indices) {
+                val enterA: Point = subj.vertex[i]
+                val exitA: Point = subj.vertex[if (i + 1 < subj.vertex.size) i + 1 else 0]
+                for (clip in clips) {
+                    for (j in clip.vertex.indices) {
+                        val enterB: Point = clip.vertex[j]
+                        val exitB: Point = clip.vertex[if (j + 1 < clip.vertex.size) j + 1 else 0]
 
-                val x =
-                    ((enterA.x * exit.y - enterA.y * exit.x) * (enterB.x - exitB.x) -
-                            (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.x - exit.x)) /
-                            ((enterA.x - exit.x) * (enterB.y - exitB.y) - (enterA.y - exit.y) * (enterB.x - exitB.x))
-                val y =
-                    ((enterA.x * exit.y - enterA.y * exit.x) * (enterB.y - exitB.y)
-                            - (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.y - exit.y)) /
-                            ((enterA.x - exit.x) * (enterB.y - exitB.y) - (enterA.y - exit.y) * (enterB.x - exitB.x))
+                        val x = ((enterA.x * exitA.y - enterA.y * exitA.x) * (enterB.x - exitB.x) -
+                                (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.x - exitA.x)) /
+                                ((enterA.x - exitA.x) * (enterB.y - exitB.y) - (enterA.y - exitA.y) * (enterB.x - exitB.x))
+                        val y = ((enterA.x * exitA.y - enterA.y * exitA.x) * (enterB.y - exitB.y)
+                                - (enterB.x * exitB.y - enterB.y * exitB.x) * (enterA.y - exitA.y)) /
+                                ((enterA.x - exitA.x) * (enterB.y - exitB.y) - (enterA.y - exitA.y) * (enterB.x - exitB.x))
 
-                if ((x >= enterA.x && x <= exit.x || x >= exit.x && x <= enterA.x) &&
-                    (y >= enterA.y && y <= exit.y || y >= exit.y && y <= enterA.y) &&
-                    (x >= enterB.x && x <= exitB.x || x >= exitB.x && x <= enterB.x) &&
-                    (y >= enterB.y && y <= exitB.y || y >= exitB.y && y <= enterB.y)
-                ) {
-                    intersection.add(Point(x, y, Type.INTERSECTION))
-                    println("adding $x $y")
+                        if ((x >= enterA.x && x <= exitA.x || x >= exitA.x && x <= enterA.x) &&
+                            (y >= enterA.y && y <= exitA.y || y >= exitA.y && y <= enterA.y) &&
+                            (x >= enterB.x && x <= exitB.x || x >= exitB.x && x <= enterB.x) &&
+                            (y >= enterB.y && y <= exitB.y || y >= exitB.y && y <= enterB.y)
+                        ) {
+                            intersection.add(Point(x, y, Type.INTERSECTION))
+                            println("adding $x $y")
+                        }
+                    }
                 }
             }
         }
     }
 
-    private fun weilerAtherton () {
-        var beginning = true
-        val res = ArrayList<Figure>()
-
-        val subjCopy: ArrayList<Point> = subj.vertexInsert
-
-        val clipCopy: ArrayList<Point> = clip.vertexInsert
-
-
-        val enters = LinkedList<Point>()
-        for (point in subjCopy) {
-            if (point.isIntersection) {
-                if (beginning) enters.add(point)
-                beginning = !beginning
-            }
-        }
-
-        while (enters.size > 0) {
-            val resPart = Figure()
-            val begin = enters.pollFirst()
-            var current = begin
-            var isA = true
-            var currentList = subjCopy
-
-            do {
-                var i = currentList.indexOf(current)
-                do {
-                    if (i == -1) break
-
-                        resPart.add(currentList[i])
-                    i++
-                    if (i == currentList.size) i = 0
-                } while (!currentList[i].isIntersection)
-                if (i == -1) break
-                current = currentList[i]
-                enters.remove(current)
-                currentList = if (isA) clipCopy else subjCopy
-                isA = !isA
-            } while (current !== begin)
-            res.add(resPart)
-        }
-        result.addAll(res)
-    }
+//    private fun weilerAtherton () {
+//        var beginning = true
+//        val res = ArrayList<Figure>()
+//
+//        val subjCopy: ArrayList<Point> = subjs.vertexInsert
+//        val clipCopy: ArrayList<Point> = clips.vertexInsert
+//
+//
+//        val enters = LinkedList<Point>()
+//        for (point in subjCopy) {
+//            if (point.isIntersection) {
+//                if (beginning) enters.add(point)
+//                beginning = !beginning
+//            }
+//        }
+//
+//        while (enters.size > 0) {
+//            val resPart = Figure()
+//            val begin = enters.pollFirst()
+//            var current = begin
+//            var isA = true
+//            var currentList = subjCopy
+//
+//            do {
+//                var i = currentList.indexOf(current)
+//                do {
+//                    if (i == -1) break
+//
+//                        resPart.add(currentList[i])
+//                    i++
+//                    if (i == currentList.size) i = 0
+//                } while (!currentList[i].isIntersection)
+//                if (i == -1) break
+//                current = currentList[i]
+//                enters.remove(current)
+//                currentList = if (isA) clipCopy else subjCopy
+//                isA = !isA
+//            } while (current !== begin)
+//            res.add(resPart)
+//        }
+//        result.addAll(res)
+//    }
 
     private fun clear() {
-        subj.clear()
-        clip.clear()
+        subjs.clear()
+        clips.clear()
         final[0] = false
         final[1] = false
     }
 
-    private fun drawFigure() {
+    private fun drawSubj() {
         glPushMatrix()
-        glBegin(if (final[0]) GL_LINE_LOOP else GL_LINE_STRIP)
         glColor3f(WHITE.first, WHITE.second, WHITE.third)
-        for (point in subj) {
-            val x: Float = (point.x - (width / 2).toFloat()) / (width / 2).toFloat()
-            val y: Float = -(point.y - (height / 2).toFloat()) / (height / 2).toFloat()
-            glVertex2f(x, y)
+        for (subj in subjs) {
+            glBegin(subj.mode)
+            for (point in subj) {
+                val x: Float = (point.x - (width / 2).toFloat()) / (width / 2).toFloat()
+                val y: Float = -(point.y - (height / 2).toFloat()) / (height / 2).toFloat()
+                glVertex2f(x, y)
+            }
+            glEnd()
         }
-        glEnd()
         glPopMatrix()
     }
 
-    private fun drawCutter() {
+    private fun drawClip() {
         glPushMatrix()
-        glBegin(if (final[1]) GL_LINE_LOOP else GL_LINE_STRIP)
         glColor3f(RED.first, RED.second, RED.third)
-        for (point in clip) {
-            val x: Float = (point.x - (width / 2).toFloat()) / (width / 2).toFloat()
-            val y: Float = -(point.y - (height / 2).toFloat()) / (height / 2).toFloat()
-            glVertex2f(x, y)
+        for (clip in clips) {
+            glBegin(clip.mode)
+            for (point in clip) {
+                val x: Float = (point.x - (width / 2).toFloat()) / (width / 2).toFloat()
+                val y: Float = -(point.y - (height / 2).toFloat()) / (height / 2).toFloat()
+                glVertex2f(x, y)
+            }
+            glEnd()
         }
-        glEnd()
         glPopMatrix()
     }
 
     private fun drawIntersection () {
         glPushMatrix()
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glBegin(GL_LINE_LOOP)
         glColor3f(GREEN.first, GREEN.second, GREEN.third)
         for (figure in result){
@@ -229,6 +241,22 @@ class Lab5{
         }
         glEnd()
         glPopMatrix()
+    }
+
+    private fun drawDots() {
+        for (p in intersection) {
+            glPushMatrix()
+            val x = (p.x - (width/2)) / (width / 2)
+            val y = -(p.y - (height/2)) / (height / 2)
+            glBegin(GL_QUADS)
+            glColor3f(BLUE.first, BLUE.second, BLUE.third)
+            glVertex2f(x+.005f, y+.005f)
+            glVertex2f(x+.005f, y-.005f)
+            glVertex2f(x-.005f, y-.005f)
+            glVertex2f(x-.005f, y+.005f)
+            glEnd()
+            glPopMatrix()
+        }
     }
 
     private fun loop() {
@@ -247,8 +275,9 @@ class Lab5{
 
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 
-            drawFigure()
-            drawCutter()
+            drawSubj()
+            drawClip()
+            drawDots()
             if (intersect) {
                 drawIntersection()
             }
@@ -277,6 +306,7 @@ fun main(){
 }
 
 private class Figure: Iterable<Point> {
+    var mode = GL_LINE_STRIP
     var vertex: ArrayList<Point> = ArrayList()
     var vertexInsert: ArrayList<Point>
     var isolation: Boolean
